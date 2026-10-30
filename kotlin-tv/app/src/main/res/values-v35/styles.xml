@@ -1,0 +1,18 @@
+<resources>
+    <!--
+        Android 15 (API 35) enforces edge-to-edge for target 35+ apps.  The TV
+        activity already owns a full-screen immersive layout and custom modal
+        windows, so keeping the API 35 opt-out avoids system inset padding
+        being applied twice.  Android 16 ignores this temporary opt-out; the
+        activity remains safe there because it hides system bars explicitly.
+    -->
+    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">#FF8964</item>
+        <item name="android:windowBackground">#0B0F15</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    </style>
+</resources>

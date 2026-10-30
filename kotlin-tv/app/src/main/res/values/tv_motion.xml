@@ -1,0 +1,14 @@
+<resources>
+    <item name="tv_motion_focus" type="id" />
+    <item name="tv_motion_cleanup" type="id" />
+    <item name="tv_motion_visibility" type="id" />
+    <item name="tv_motion_arrival" type="id" />
+    <style name="TvDialogMotion">
+        <item name="android:windowEnterAnimation">@anim/tv_dialog_enter</item>
+        <item name="android:windowExitAnimation">@anim/tv_dialog_exit</item>
+    </style>
+    <style name="TvSidePanelMotion">
+        <item name="android:windowEnterAnimation">@anim/tv_panel_enter</item>
+        <item name="android:windowExitAnimation">@anim/tv_panel_exit</item>
+    </style>
+</resources>
