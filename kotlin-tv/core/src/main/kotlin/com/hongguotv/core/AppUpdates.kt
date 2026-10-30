@@ -3,6 +3,7 @@ package com.hongguotv.core
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -30,9 +31,8 @@ data class AppUpdate(
     val downloadUrl get() = apkUrl
 
     companion object {
-        const val MANIFEST_URL = "https://api.laozhangone.top/apk/update.json"
-        const val APK_HOST = "api.laozhangone.top"
-        const val APK_PREFIX = "/apk/"
+        const val REPOSITORY = "laozhangaa/HongGuoTV"
+        const val MANIFEST_URL = "https://github.com/$REPOSITORY/releases/latest/download/update.json"
         const val MAX_APK_BYTES = 80L * 1024 * 1024
         private val fileNamePattern = Regex("[A-Za-z0-9][A-Za-z0-9._+\\-]{0,159}\\.apk")
 
@@ -47,14 +47,36 @@ data class AppUpdate(
                 fileName, apk.getLong("size"), apk.getString("sha256").lowercase(), o.optString("notes").take(1500)
             )
             val url = runCatching { apkUrl.toHttpUrl() }.getOrNull() ?: throw IllegalArgumentException("更新地址不正确")
-            require(url.scheme == "https" && url.host == APK_HOST && url.port == 443 && url.encodedPath.startsWith(APK_PREFIX) &&
-                url.query == null && url.fragment == null && url.username.isEmpty() && url.password.isEmpty()) { "更新地址不受支持" }
+            require(UpdateUrls.isReleaseAsset(url) && url.pathSegments.lastOrNull()?.endsWith(".apk") == true) { "更新地址不受支持" }
             require(fileNamePattern.matches(fileName) && fileName != "update.json") { "安装包文件名不正确" }
             require(url.pathSegments.lastOrNull() == fileName) { "更新地址与文件名不一致" }
             require(update.versionCode in 1..Int.MAX_VALUE.toLong() && update.minSdk in 26..100)
             require(update.versionName.matches(Regex("[0-9][0-9A-Za-z.+-]{0,63}")))
             require(update.size in 1..MAX_APK_BYTES && update.sha256.matches(Regex("[0-9a-f]{64}")))
             return update
+        }
+    }
+}
+
+/** The manifest chooses only an asset in this repository; GitHub controls CDN redirects. */
+internal object UpdateUrls {
+    private val releaseAsset = Regex("/${AppUpdate.REPOSITORY}/releases/download/[A-Za-z0-9][A-Za-z0-9._+\\-]{0,127}/(?:update\\.json|[A-Za-z0-9][A-Za-z0-9._+\\-]{0,159}\\.apk)")
+
+    private fun secure(url: HttpUrl) = url.scheme == "https" && url.port == 443 &&
+        url.username.isEmpty() && url.password.isEmpty() && url.fragment == null
+
+    fun isReleaseAsset(url: HttpUrl) = secure(url) && url.host == "github.com" &&
+        url.query == null && releaseAsset.matches(url.encodedPath)
+
+    fun allows(url: HttpUrl): Boolean {
+        if (!secure(url)) return false
+        return when (url.host) {
+            "github.com" -> url.toString() == AppUpdate.MANIFEST_URL || isReleaseAsset(url)
+            // Release downloads use signed query parameters on these exact hosts.
+            "release-assets.githubusercontent.com", "objects.githubusercontent.com" ->
+                url.encodedPath.startsWith("/github-production-release-asset/") ||
+                    url.encodedPath.startsWith("/github-production-release-asset-")
+            else -> false
         }
     }
 }
@@ -108,12 +130,11 @@ object UpdateFiles {
 }
 
 class AppUpdateRepository : java.io.Closeable {
-    private val http = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS)
+    private val http = OkHttpClient.Builder().dns(Ipv4FirstDns()).followSslRedirects(false)
+        .connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS)
         .callTimeout(5, TimeUnit.MINUTES).addNetworkInterceptor { chain ->
             val url = chain.request().url
-            // Both metadata and APK redirects must remain on the first-party
-            // HTTPS host and inside /apk/; manifest data never chooses a host.
-            if (url.scheme != "https" || url.host != AppUpdate.APK_HOST || !url.encodedPath.startsWith(AppUpdate.APK_PREFIX))
+            if (!UpdateUrls.allows(url))
                 throw IOException("更新下载地址不受支持")
             chain.proceed(chain.request())
         }.build()
@@ -138,7 +159,7 @@ class AppUpdateRepository : java.io.Closeable {
     fun download(update: AppUpdate, file: File, progress: (Int) -> Unit) {
         if (UpdateFiles.verify(file, update)) return
         http.newCall(request(update.downloadUrl)).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("安装包下载失败（HTTP ${response.code}），请检查服务器文件")
+            if (!response.isSuccessful) throw IOException("安装包下载失败（HTTP ${response.code}），请稍后重试")
             val body = response.body ?: throw IOException("安装包为空")
             if (body.contentLength() >= 0 && body.contentLength() != update.size)
                 throw IOException("安装包长度异常（服务器 ${body.contentLength()} 字节，清单 ${update.size} 字节）")

@@ -1,6 +1,7 @@
 package com.hongguotv.core
 
 import org.json.JSONObject
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -15,7 +16,7 @@ class AppUpdatesTest {
     private val checksum = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
     private fun json() = JSONObject().put("schema", 1).put("packageName", "com.hongguotv.laozhangapp")
         .put("versionCode", 25).put("versionName", "0.10.8").put("minSdk", 26)
-        .put("apk", JSONObject().put("url", "https://api.laozhangone.top/apk/$fileName").put("name", fileName)
+        .put("apk", JSONObject().put("url", "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName").put("name", fileName)
             .put("size", bytes.size).put("sha256", checksum))
     private fun update() = AppUpdate.parse(json().toString())
     private fun withFile(block: (File) -> Unit) {
@@ -31,24 +32,58 @@ class AppUpdatesTest {
 
     @Test fun manifestAcceptsFirstPartyApkUrlAndKeepsUserFilename() {
         val parsed = update()
-        assertEquals("https://api.laozhangone.top/apk/update.json", AppUpdate.MANIFEST_URL)
-        assertEquals("https://api.laozhangone.top/apk/$fileName", parsed.downloadUrl)
+        assertEquals("https://github.com/laozhangaa/HongGuoTV/releases/latest/download/update.json", AppUpdate.MANIFEST_URL)
+        assertEquals("https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName", parsed.downloadUrl)
         assertEquals(fileName, parsed.fileName)
     }
 
     @Test fun manifestRejectsOtherHostsPathsQueriesAndMismatchedNames() {
         val values = listOf(
-            "https://github.com/N3urda/hongguoTV/releases/app.apk" to fileName,
-            "https://api.laozhangone.top/other/$fileName" to fileName,
-            "https://api.laozhangone.top/apk/$fileName?download=1" to fileName,
-            "https://api.laozhangone.top/apk/other.apk" to fileName,
-            "https://api.laozhangone.top/apk/$fileName" to "../bad.apk",
-            "https://api.laozhangone.top/apk/$fileName" to "bad name.apk"
+            "https://github.com/N3urda/hongguoTV/releases/download/v0.10.8/$fileName" to fileName,
+            "https://github.com/laozhangaa/TDXY/releases/download/v0.10.8/$fileName" to fileName,
+            "https://api.laozhangone.top/apk/$fileName" to fileName,
+            "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName?download=1" to fileName,
+            "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/other.apk" to fileName,
+            "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName" to "../bad.apk",
+            "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName" to "bad name.apk",
+            "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/nested/$fileName" to fileName,
+            "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/update.json" to "update.json",
+            "https://release-assets.githubusercontent.com/github-production-release-asset/1/$fileName" to fileName
         )
         values.forEach { (url, name) ->
             val o = json(); o.getJSONObject("apk").put("url", url).put("name", name)
             assertThrows(IllegalArgumentException::class.java) { AppUpdate.parse(o.toString()) }
         }
+    }
+
+    @Test fun allowGithubManifestAndSignedReleaseAssetRedirects() {
+        val urls = listOf(
+            AppUpdate.MANIFEST_URL,
+            "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/update.json",
+            update().downloadUrl,
+            "https://release-assets.githubusercontent.com/github-production-release-asset/123/asset?sig=signed&se=expiry",
+            "https://objects.githubusercontent.com/github-production-release-asset-2e65be/123/asset?X-Amz-Signature=signed"
+        )
+        urls.forEach { assertTrue(it, UpdateUrls.allows(it.toHttpUrl())) }
+    }
+
+    @Test fun rejectRedirectsOutsideGithubReleaseDownloadHosts() {
+        val urls = listOf(
+            "http://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName",
+            "https://github.com:444/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName",
+            "https://user:password@github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName",
+            "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName#fragment",
+            "https://github.com/laozhangaa/TDXY/releases/download/v0.10.8/update.json",
+            "https://github.com/laozhangaa/HongGuoTV/releases/latest/download/update.json?other=1",
+            "https://github.com.evil.example/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName",
+            "https://release-assets.githubusercontent.com.evil.example/github-production-release-asset/123/asset",
+            "http://release-assets.githubusercontent.com/github-production-release-asset/123/asset",
+            "https://release-assets.githubusercontent.com:444/github-production-release-asset/123/asset",
+            "https://objects.githubusercontent.com/unrelated/asset",
+            "https://raw.githubusercontent.com/laozhangaa/HongGuoTV/main/update.json",
+            "https://127.0.0.1/$fileName"
+        )
+        urls.forEach { assertFalse(it, UpdateUrls.allows(it.toHttpUrl())) }
     }
 
     @Test fun rejectOtherPackageAndInvalidSchema() {

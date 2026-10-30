@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Generate the first-party update.json beside a release APK.
+"""Generate update.json for a signed APK in HongGuoTV's GitHub Releases.
 
 This script only writes metadata. Upload the generated update.json and the APK
-to https://api.laozhangone.top/apk/ after checking the hash and signature.
+to the same GitHub Release after checking the hash and signature.
 """
 import argparse
 import hashlib
@@ -11,8 +11,8 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
-HOST = "api.laozhangone.top"
-PREFIX = "/apk/"
+HOST = "github.com"
+PREFIX = "/laozhangaa/HongGuoTV/releases/download/"
 PACKAGE = "com.hongguotv.laozhangapp"
 
 
@@ -23,7 +23,7 @@ def main():
     parser.add_argument("--version-name", required=True)
     parser.add_argument("--min-sdk", type=int, default=26)
     parser.add_argument("--package", default=PACKAGE)
-    parser.add_argument("--apk-url", help="完整 HTTPS 地址；默认使用同名 /apk/ 地址")
+    parser.add_argument("--apk-url", help="本仓库 Release APK 地址；默认使用 v<version-name> 标签下同名 APK")
     parser.add_argument("--notes", default="")
     parser.add_argument("--output", type=Path, help="清单输出路径，默认写入 APK 同目录 update.json")
     args = parser.parse_args()
@@ -38,14 +38,19 @@ def main():
     if not 26 <= args.min_sdk <= 100:
         parser.error("min-sdk 必须在 26—100 之间")
     name = apk.name
-    url = args.apk_url or f"https://{HOST}{PREFIX}{name}"
+    url = args.apk_url or f"https://{HOST}{PREFIX}v{args.version_name}/{name}"
     parsed = urlparse(url)
-    if parsed.scheme != "https" or parsed.hostname != HOST or parsed.port not in (None, 443) or not parsed.path.startswith(PREFIX) or parsed.query or parsed.fragment or parsed.username:
-        parser.error("apk-url 必须是 https://api.laozhangone.top/apk/ 下的地址")
+    release_path = re.fullmatch(re.escape(PREFIX) + r"[A-Za-z0-9][A-Za-z0-9._+\-]{0,127}/[A-Za-z0-9][A-Za-z0-9._+\-]{0,159}\.apk", parsed.path)
+    if parsed.scheme != "https" or parsed.hostname != HOST or parsed.port not in (None, 443) or not release_path or parsed.query or parsed.fragment or parsed.username or parsed.password:
+        parser.error("apk-url 必须是本仓库 GitHub Releases 的 APK 地址")
     if Path(parsed.path).name != name:
         parser.error("apk-url 最后文件名必须与 APK 文件名一致")
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+\-]{0,159}\.apk", name):
         parser.error("APK 文件名只能包含 ASCII 字母、数字、点、下划线、加号和连字符")
+    if args.package != PACKAGE:
+        parser.error(f"package 必须是 {PACKAGE}")
+    if not 1 <= apk.stat().st_size <= 80 * 1024 * 1024:
+        parser.error("APK 大小必须在 1 字节至 80 MiB 之间")
     digest = hashlib.sha256(apk.read_bytes()).hexdigest()
     manifest = {
         "schema": 1,
