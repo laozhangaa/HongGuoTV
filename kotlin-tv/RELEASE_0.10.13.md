@@ -15,7 +15,7 @@
 
 - Release 构建和 `lintRelease` 成功；lint 无 Error/Fatal，仅有项目原有弃用警告。
 - 已验证包名、应用名、versionCode、versionName、minSdk 和 v2 签名；与 0.10.12 的证书 SHA-256 一致，可覆盖安装。
-- 已在 MuMu `10.240.88.17:5555` 覆盖安装并启动，启动日志无 `AndroidRuntime` 崩溃。
+- 已在 MuMu 模拟器覆盖安装并启动，启动日志无 `AndroidRuntime` 崩溃。
 - 极米 Z6X 当前未开机，投影实机的帧率切换和画面抖动仍需开机后连续播放多集验证。
 
 ## 交付文件
@@ -25,4 +25,4 @@
 - `outputs/update-v0.10.13.json`
 - `outputs/SHA256SUMS-v0.10.13`
 
-更新清单和 APK 已在本地生成，尚未上传到 `api.laozhangone.top`。
+本次历史交付的更新清单和 APK 已在本地生成，当时尚未上传更新服务器。

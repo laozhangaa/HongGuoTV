@@ -16,7 +16,7 @@
 - 全量核心测试 121 项，119 项通过，2 项失败。`RelatedSeasonsTest.unrelatedFirstPageCanContinueButSearchIsBounded` 与 `SignerTest.matchesPinnedJavaScriptOracleAcrossTimestampVariants` 在本次修改前生成的 core.jar 中也有同样失败，已单独复现并保存，未在本次播放连接修复中修改这两个模块。
 - Release 构建与 lintRelease 成功；lint 0 errors、42 warnings。
 - 签名 SHA-256 与既有 APK 相同，已核对版本、包名、最低系统要求。
-- 已在 `192.168.124.21:5555` 覆盖安装，保留应用数据。
+- 已在测试设备覆盖安装，保留应用数据。
 
 同一部剧《以眼还眼：该闺蜜养我了！》实测：
 

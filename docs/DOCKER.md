@@ -1,10 +1,12 @@
 # Docker 部署
 
+本文保留早期 React Native 版内容服务的源码构建方法。当前 Kotlin 原生版无需部署后端，使用说明见[项目主页](../README.md)。
+
 Docker 运行独立内容服务，电视安装 APK 后连接它。目标为家庭网络中的电脑或 NAS，提供 `linux/amd64` 和 `linux/arm64` 镜像。收藏与观看进度保存在电视本地，服务无需挂载数据卷。
 
 ## 使用源码或 Docker 部署包
 
-从 [v0.1.1 Release](https://github.com/N3urda/hongguoTV/releases/tag/v0.1.1) 下载 `hongguotv-0.1.1-docker.zip` 并解压，也可以克隆完整仓库。在解压后的根目录执行：
+在本仓库源码根目录执行：
 
 ```sh
 cp .env.example .env
@@ -20,25 +22,9 @@ docker compose --env-file .env -f server/compose.yaml ps
 BRIDGE_BIND_IP=0.0.0.0
 BRIDGE_PORT=8787
 BRIDGE_TOKEN=
-HONGGUOTV_VERSION=0.1.1
 ```
 
-`BRIDGE_TOKEN` 留空表示不启用口令，填入值后电视端也应填写相同口令；不要提交实际 `.env`。`BRIDGE_BIND_IP` 控制宿主机监听网卡，默认开放宿主机各网卡；可填宿主机家庭网络地址。`BRIDGE_PORT` 是电视访问的宿主机端口，容器内始终为 8787。`HONGGUOTV_VERSION` 仅供下面的预构建镜像模式使用。
-
-## 使用 GitHub 预构建镜像
-
-镜像地址：`ghcr.io/n3urda/hongguotv-bridge:0.1.1`，同时提供 `latest`。根目录的 `compose.yaml` 默认固定到 `0.1.1`，Docker 根据宿主机架构选择镜像。
-
-当前仓库与容器包按私有访问使用，需要有包读取权限的 GitHub 账号先登录 GHCR。可使用 classic PAT 的 `read:packages` 权限；通过 Docker 的交互式密码提示输入，不要把令牌写入命令历史或 Compose 文件：
-
-```sh
-docker login ghcr.io -u YOUR_GITHUB_USERNAME
-docker compose --env-file .env pull
-docker compose --env-file .env up -d
-docker compose --env-file .env ps
-```
-
-容器仓库认证规则见 [GitHub 官方文档](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry)。如不想配置镜像仓库令牌，使用上面的源码构建方式即可。
+`BRIDGE_TOKEN` 留空表示不启用口令，填入值后电视端也应填写相同口令；不要提交实际 `.env`。`BRIDGE_BIND_IP` 控制宿主机监听网卡，默认开放宿主机各网卡；可填宿主机家庭网络地址。`BRIDGE_PORT` 是电视访问的宿主机端口，容器内始终为 8787。源码构建不需要配置镜像仓库令牌。
 
 ## 电视连接和排查
 
@@ -61,6 +47,6 @@ docker compose -f server/compose.yaml logs --tail=100
 
 推送稳定版本标签（如 `v0.1.1`）时，所有检查通过后发布对应版本和 `latest` 标签到 GHCR。第三方 Actions 固定提交 SHA，认证使用 GitHub 提供的临时 `GITHUB_TOKEN`，不在仓库内存储发布令牌。
 
-当前执行结果见 [GitHub Actions](https://github.com/N3urda/hongguoTV/actions/workflows/verify-publish.yml)。容器启动检查与媒体接口、电视播放分别验收，不能相互替代。
+容器启动检查与媒体接口、电视播放分别验收，不能相互替代。
 
-2026-09-21 首次云端验证已通过：[运行 35563476910](https://github.com/N3urda/hongguoTV/actions/runs/35563476910)。Node 22 类型检查、9 项测试、两份 Compose 配置校验，以及 AMD64 / ARM64 镜像构建和容器启动检查全部成功；ARM64 使用 QEMU，并非实际 NAS 硬件验收。
+2026-09-21 历史验证中，Node 22 类型检查、9 项测试、两份 Compose 配置校验，以及 AMD64 / ARM64 镜像构建和容器启动检查全部成功；ARM64 使用 QEMU，并非实际 NAS 硬件验收。

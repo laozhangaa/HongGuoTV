@@ -4,20 +4,19 @@
 
 ## 下载与部署
 
-[GitHub v0.1.1 Release](https://github.com/N3urda/hongguoTV/releases/tag/v0.1.1) 提供 APK、源码、Docker 部署包、验证证据与 SHA256SUMS。内容服务镜像为 `ghcr.io/n3urda/hongguotv-bridge:0.1.1`，提供 AMD64 / ARM64；本版服务协议兼容 0.1.0。
+本历史版本交付 APK、源码、Docker 部署包、验证证据与 SHA256SUMS；服务协议兼容 0.1.0。当前 Kotlin 原生版的下载与使用见[项目主页](../README.md)，无需部署本节的内容服务。
 
 ```sh
 adb install -r hongguotv-0.1.1-android8.apk
 ```
 
-使用根目录 Compose 时，将 `.env` 中 `HONGGUOTV_VERSION` 改为 `0.1.1`，然后执行：
+需要运行历史内容服务时，使用仓库源码构建：
 
 ```sh
-docker compose --env-file .env pull
-docker compose --env-file .env up -d
+docker compose --env-file .env -f server/compose.yaml up -d --build
 ```
 
-私有镜像需要 GHCR 登录；不便登录时可使用 Release 内的 Docker 部署包从源码构建。完整步骤见 [Docker 部署指南](DOCKER.md)。签名密钥不包含在源码或附件中，不要先卸载旧版。
+完整步骤见 [Docker 部署指南](DOCKER.md)。签名密钥不包含在源码或附件中，不要先卸载旧版。
 
 ## 改动
 

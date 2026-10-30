@@ -186,7 +186,7 @@ class PhoneLogin(private val http: OkHttpClient) {
             return "+$cc $digits"
         }
 
-        /** 一整串的写法：`13800138000`（大陆），或 `+区号-号码` / `+区号 号码`（如 `+886-0912345678`）。 */
+        /** 支持大陆号码，或使用 `+区号-号码` / `+区号 号码` 输入境外号码。 */
         fun parse(raw: String): String {
             val text = raw.trim()
             if (!text.startsWith("+")) return format("86", text)

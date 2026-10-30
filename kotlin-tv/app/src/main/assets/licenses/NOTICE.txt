@@ -1,0 +1,70 @@
+HongGuoTV — source and third-party notices
+
+Project source and derived implementation: GPL-3.0-only.
+The complete license is in GPL-3.0.txt.
+Corresponding application source and build instructions:
+https://github.com/laozhangaa/HongGuoTV
+
+The original project and referenced source implementations are:
+https://github.com/N3urda/hongguoTV
+https://github.com/woshishiq1/drpys/tree/22261adfa31435e3b3ef5a730b8a2a75bcaf1715
+https://github.com/tsukiyo-zero/hongguoTV
+https://github.com/charlie901208/HGTV/tree/feat/phone-login
+Their source attributions and changes are documented in kotlin-tv/NOTICE.md
+in the application source repository.
+
+Apache-2.0.txt applies to the following Apache-licensed dependencies:
+
+- Kotlin standard library 2.2.10 and JDK bridge libraries 1.9.10:
+  https://github.com/JetBrains/kotlin
+- JetBrains annotations 13.0:
+  https://github.com/JetBrains/java-annotations
+- AndroidX Core 1.8.0 and its AndroidX support dependencies, including
+  annotations, collections, lifecycle, concurrency, versioned parcelables,
+  RecyclerView, custom views, and ExifInterface:
+  https://android.googlesource.com/platform/frameworks/support/
+- AndroidX Media3 1.11.1:
+  https://github.com/androidx/media
+- ZXing Core 3.5.3:
+  https://github.com/zxing/zxing
+- OkHttp 4.12.0 and Okio 3.6.0:
+  https://github.com/square/okhttp
+  https://github.com/square/okio
+- Guava 33.3.1-android and failureaccess 1.0.2:
+  https://github.com/google/guava
+
+Bouncy Castle 1.79:
+  Copyright (c) 2000-2023 The Legion of the Bouncy Castle Inc.
+  https://www.bouncycastle.org
+  The dependency's complete MIT permission and disclaimer are reproduced
+  in BOUNCY-CASTLE-MIT.txt.
+
+jsoup 1.23.2:
+  Copyright (c) 2009-2026 Jonathan Hedley.
+  https://jsoup.org/
+  Its complete MIT license is reproduced in JSOUP-MIT.txt.
+
+Public Suffix List data bundled by OkHttp:
+  MPL-2.0.txt contains the Mozilla Public License 2.0.
+  PUBLIC-SUFFIX-NOTICE.txt reproduces the dependency's original data notice
+  and source location. This notice also remains in the dependency resource
+  okhttp3/internal/publicsuffix/NOTICE.
+
+desugar_jdk_libs_nio 2.1.5, based on OpenJDK:
+  https://github.com/google/desugar_jdk_libs
+  DESUGAR-GPL-2.0-with-classpath-exception.txt contains the GNU GPL version 2
+  and the Classpath exception. DESUGAR-ASSEMBLY_EXCEPTION.txt and
+  DESUGAR-ADDITIONAL_LICENSE_INFO.txt retain its supplementary notices.
+  These files are copied from revision
+  092407c51c3eaaaa9e46f7b7e436dc642f614064, whose VERSION_JDK11_NIO.txt
+  identifies release 2.1.5. The R8 adapter/configuration artifact's BSD
+  notice is reproduced in DESUGAR-R8-BSD-3-Clause.txt.
+
+Noto Serif SC font subset:
+  Copyright 2012 Google Inc.
+  SIL Open Font License 1.1, reproduced in OFL-NotoSerifSC.txt.
+  https://fonts.google.com/noto/specimen/Noto+Serif+SC
+  This application bundles only the glyphs used by its remote-control title.
+
+Each component remains under its own license. References above identify
+source and copyright provenance and do not imply endorsement by its authors.

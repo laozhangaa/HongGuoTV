@@ -2,7 +2,7 @@
 
 最低 Android 8.0 / API 26，包名 `com.hongguotv.nativeapp`，versionCode 7。单 APK，联网即用，无需 Docker 或额外服务；沿用发布签名，覆盖安装 0.6.0 保留本机记录。
 
-发布目标：[kotlin-v0.7.0](https://github.com/N3urda/hongguoTV/releases/tag/kotlin-v0.7.0)，安装包名 `hongguotv-kotlin-0.7.0-android8.apk`。
+历史发布标签为 `kotlin-v0.7.0`，安装包名 `hongguotv-kotlin-0.7.0-android8.apk`。当前版本下载见[项目主页](../README.md)。
 
 ## 本版变化
 

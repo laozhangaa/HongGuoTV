@@ -9,6 +9,8 @@
 
 匿名设备会话参考 [tsukiyo-zero/hongguoTV](https://github.com/tsukiyo-zero/hongguoTV) 的 `PlaybackDeviceSession.kt`、播放请求结构及保留漫剧分类的搜索协议版本（GPL-3.0-only，2026-10-27）。搜索、播放、重试和预载共用匿名注册结果，不需要账户 Cookie。
 
+手机号登录、设备注册及账户接口结构的相关来源，按 `PhoneLogin.kt`、`DeviceRegister.kt` 与 `CloudAccount.kt` 的源码头部记录，为 [charlie901208/HGTV 的 feat/phone-login 分支](https://github.com/charlie901208/HGTV/tree/feat/phone-login)（2026-10-21，文件标注 GPL-3.0-only）。本声明记录代码出处与许可标注，不表示已核实内容平台对第三方客户端的授权。
+
 `kotlin-tv/` 原生应用源码和派生实现以 GPL-3.0-only 发布，许可证全文见 `LICENSE`。发布 APK 时同时提供本分支对应源码、Gradle 包装器和构建说明。APK 不包含 Node、React Native、JavaScript 引擎或该 JavaScript 源文件。`tools/signing-oracle.cjs` 仅为开发期生成对照测试数据的工具，不参与应用构建或运行。
 
 其他依赖：
@@ -18,6 +20,7 @@
 - Kotlin 标准库：https://github.com/JetBrains/kotlin — Apache-2.0
 - AndroidX Media3：https://github.com/androidx/media — Apache-2.0
 - OkHttp / Okio：https://github.com/square/okhttp / https://github.com/square/okio — Apache-2.0
+- OkHttp 附带的 Public Suffix List 数据 — MPL-2.0，保留其原始数据来源声明。
 - Bouncy Castle SM3：https://github.com/bcgit/bc-java — MIT
 - jsoup（仅解析官网 HTML，不执行网页脚本）：https://jsoup.org/ — MIT
 - Android desugar_jdk_libs：https://github.com/google/desugar_jdk_libs — GPL-2.0 with Classpath Exception
@@ -25,3 +28,5 @@
 - JUnit（仅测试）：https://github.com/junit-team/junit4 — EPL-1.0
 
 应用图标和 TV banner 沿用本仓库素材。这里的应用不是内容平台官方客户端。
+
+以上随包组件的许可证全文、版权声明和组件对应关系放在 APK 的 `assets/licenses/` 中，包括 desugar 的补充声明与 R8 BSD 声明。开源来源及许可记录不代替平台接口、媒体内容和商标的使用授权。

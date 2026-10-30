@@ -38,6 +38,6 @@ MuMu Android 15，1080p HEVC，1 倍速，测试《剑神归来：我和驴子�
 - `outputs/update.json` 与 `outputs/update-v0.10.14.json`
 - `outputs/SHA256SUMS-v0.10.14`
 
-已覆盖安装到 MuMu `10.240.88.17:5555`，保留应用数据。APK 与更新清单尚未上传服务器。
+已在 MuMu 模拟器覆盖安装，保留应用数据。APK 与更新清单尚未上传服务器。
 
 修改前备份：`backups/before-playlist-continuation-20261029/`。

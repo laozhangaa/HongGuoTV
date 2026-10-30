@@ -12,7 +12,7 @@
 | `outputs/hongguotv-0.1.0-docker.zip` | 独立服务源码、Dockerfile、两种 Compose、示例环境变量及部署说明 |
 | `outputs/SHA256SUMS` | 交付文件的 SHA-256 校验值 |
 
-下载入口：[GitHub v0.1.0 Release](https://github.com/N3urda/hongguoTV/releases/tag/v0.1.0)。使用电脑或 NAS 容器部署时，直接参阅 [Docker 部署指南](DOCKER.md)。
+本文为早期版本交付记录；当前版本下载与安装见[项目主页](../README.md)。历史内容服务的源码构建方法见 [Docker 部署指南](DOCKER.md)。
 
 应用标识为 `com.hongguotv`，版本名 `0.1.0`，版本号 `1`。包内包含 `armeabi-v7a` 和 `arm64-v8a`，最低系统为 Android 8.0 / API 26，targetSdk 为 36。首版使用开发密钥签名，面向个人安装；密钥不随源码包分发。请保留本机 `android/app/debug.keystore`，后续覆盖升级需使用相同密钥。卸载应用会清除本地收藏与观看记录。
 
@@ -53,7 +53,7 @@ adb install -r outputs/hongguotv-0.1.0-android8.apk
 | TypeScript | `npm run typecheck` 通过，见 `outputs/typecheck.log` |
 | 自动化测试 | 9 项通过、0 失败；覆盖续播、分页合并、地址校验、媒体范围、多分块输出、鉴权、失败脱敏及并发槽释放，见 `outputs/tests.log` |
 | 原生构建 | `assembleRelease` 成功，见 `outputs/build.log` |
-| Docker | GitHub Actions 的 AMD64 / ARM64 构建、非 root 容器启动、健康检查、端口映射与鉴权均通过；ARM64 使用 QEMU，见 [运行记录](https://github.com/N3urda/hongguoTV/actions/runs/35563476910) |
+| Docker | 历史 GitHub Actions 的 AMD64 / ARM64 构建、非 root 容器启动、健康检查、端口映射与鉴权均通过；ARM64 使用 QEMU |
 | APK | `aapt` 确认 minSdk 26、双 ARM 架构；`apksigner verify` 通过 v2 签名，见 `outputs/apk-info.txt`、`outputs/apk-signature.txt` |
 | 真实内容 | 17 项探测通过：首页 24 部；3 部搜索均匹配目标 ID；分集数 86、85、71，均无重复；每部首、中、末集共 9 个 64 KiB 媒体片段均为 206 且 MP4 头有效，见 `outputs/probe.json` |
 | 真实解码 | 第一部首集前 10 秒 FFmpeg 解码成功；样本为 HEVC 1080×1920 + AAC，时长 98.1 秒，见 `outputs/media-format.json` |
@@ -79,4 +79,4 @@ adb install -r outputs/hongguotv-0.1.0-android8.apk
 
 React Native TV 已锁定为 `0.81.5-2`，启用新架构；播放器为 `react-native-video 6.19.3`。`.npmrc` 的 `legacy-peer-deps=true` 用于兼容 RN TV 预发布版本号与第三方包的 peer 版本范围，依赖安装由锁文件固定。
 
-代码许可及第三方来源见根目录 `LICENSE` 和 `server/vendor/NOTICE.md`。源代码发布到 [GitHub 仓库](https://github.com/N3urda/hongguoTV)，APK 和交付文件作为 Release 附件提供；安装包和签名密钥不进入 Git 历史。
+代码许可及第三方来源见根目录 `LICENSE` 和 `server/vendor/NOTICE.md`。本版交付文件以 Release 附件形式保存；安装包和签名密钥不进入 Git 历史。

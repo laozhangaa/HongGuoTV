@@ -11,8 +11,8 @@ android {
         applicationId = "com.hongguotv.laozhangapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = System.getenv("HONGGUOTV_VERSION_CODE")?.toInt() ?: 35
-        versionName = System.getenv("HONGGUOTV_VERSION_NAME") ?: "0.10.18"
+        versionCode = System.getenv("HONGGUOTV_VERSION_CODE")?.toInt() ?: 36
+        versionName = System.getenv("HONGGUOTV_VERSION_NAME") ?: "0.10.19"
     }
     buildFeatures { buildConfig = true }
     signingConfigs {

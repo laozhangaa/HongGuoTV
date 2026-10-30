@@ -26,6 +26,10 @@ __pycache__/
 !.env.example
 *.jks
 *.keystore
+*.p12
+*.pfx
+*.pem
+*.key
 keystore.properties
 
 # Local captures and downloaded media

@@ -2,7 +2,7 @@
 
 最低 Android 8.0 / API 26，versionCode 8。单 APK，安装后联网使用，无需额外服务。沿用发布签名，可覆盖安装 0.7.0 并保留本机收藏、观看记录和设置。
 
-发布页：[kotlin-v0.8.0](https://github.com/N3urda/hongguoTV/releases/tag/kotlin-v0.8.0)，安装包 `hongguotv-kotlin-0.8.0-android8.apk`。
+历史发布标签为 `kotlin-v0.8.0`，安装包名 `hongguotv-kotlin-0.8.0-android8.apk`。当前版本下载见[项目主页](../README.md)。
 
 ## 播放交互
 

@@ -41,7 +41,7 @@ class AppUpdatesTest {
         val values = listOf(
             "https://github.com/N3urda/hongguoTV/releases/download/v0.10.8/$fileName" to fileName,
             "https://github.com/laozhangaa/TDXY/releases/download/v0.10.8/$fileName" to fileName,
-            "https://api.laozhangone.top/apk/$fileName" to fileName,
+            "https://updates.example.invalid/apk/$fileName" to fileName,
             "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName?download=1" to fileName,
             "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/other.apk" to fileName,
             "https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.8/$fileName" to "../bad.apk",
