@@ -1,40 +1,58 @@
-# 在线更新清单部署
+# Releases 更新清单与发布
 
-原生 TV 客户端只读取固定地址：
+应用从本仓库最新正式 Release 读取更新清单：
 
-`https://api.laozhangone.top/apk/update.json`
-
-清单里的 `apk.url` 必须继续使用同一 HTTPS 域名下的 `/apk/` 路径，安装包和清单放在同一个目录。例如最终 0.10.8 包：
-
-```json
-{
-  "schema": 1,
-  "packageName": "com.hongguotv.laozhangapp",
-  "versionCode": 25,
-  "versionName": "0.10.8",
-  "minSdk": 26,
-  "apk": {
-    "url": "https://api.laozhangone.top/apk/hongguoTV-laozhang-v0.10.8.apk",
-    "name": "hongguoTV-laozhang-v0.10.8.apk",
-    "size": 12345678,
-    "sha256": "安装包的 64 位小写 SHA-256"
-  },
-  "notes": "本次更新内容"
-}
+```text
+https://github.com/laozhangaa/HongGuoTV/releases/latest/download/update.json
 ```
 
-在仓库根目录运行本地清单生成脚本即可根据 APK 自动计算长度和 SHA-256：
+每个正式 Release 应包含已签名 APK、`update.json` 和校验文件。APK 固定使用对应版本的附件地址，例如：
 
-```powershell
-python kotlin-tv/distribution/generate-online-update.py `
-  outputs/hongguoTV-laozhang-v0.10.8.apk `
-  --version-code 25 --version-name 0.10.8 --min-sdk 26 `
-  --notes "修复搜索与在线更新" `
+```text
+https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.18/hongguoTV-laozhang-v0.10.18.apk
+```
+
+不要把 Release 网页地址或下载重定向后的临时地址填入清单。
+
+## 生成清单
+
+在仓库根目录运行，APK 路径为第一个位置参数：
+
+```sh
+python kotlin-tv/distribution/generate-online-update.py \
+  outputs/hongguoTV-laozhang-v0.10.18.apk \
+  --apk-url https://github.com/laozhangaa/HongGuoTV/releases/download/v0.10.18/hongguoTV-laozhang-v0.10.18.apk \
+  --version-code 35 \
+  --version-name 0.10.18 \
+  --notes "在线更新迁移至本仓库 Releases。" \
   --output outputs/update.json
 ```
 
-然后把同一目录中的 `update.json` 和 APK 上传到服务器的 `/apk/` 目录，并确认公网 HTTPS 请求返回 `200`、JSON 的 `Content-Type` 正常，APK 下载大小与清单一致。脚本不会签名或上传文件，也不会替换原有 GitHub 发布脚本。
+脚本根据实际文件计算大小和 SHA-256，不签名、不构建、不上传。省略 `--apk-url` 时，默认使用本仓库 `v<version-name>` 标签下的同名 APK 附件地址。包名默认为 `com.hongguotv.laozhangapp`，最低 API 默认为 26；版本参数必须与 APK 内部元数据一致。
 
-客户端会检查包名、版本号、最低 API、文件名、同域地址、文件长度、SHA-256，以及 APK 签名是否和当前安装版本一致。自动检查只在应用前台且未播放时进行；发现新版只显示提醒，必须点击“下载新版”，下载完成后再点击“安装新版”。播放期间不会弹窗、下载或安装。设置中的“版本与更新”可随时手动检查。
+清单格式为 `schema: 1`，包含 `packageName`、`versionCode`、`versionName`、`minSdk`、`notes`，以及 `apk` 中的 `url`、`name`、`size`、`sha256`。
 
-服务端目前若尚未部署该路径，客户端会显示“无法检查更新”；上传清单和 APK 后才会生效。
+## 发布步骤
+
+1. 提交对应源码，完成测试、Release lint、签名构建和设备验证，核对 APK 的包名、版本、最低系统和签名。
+2. 生成清单和校验文件，确认文件名、大小和 SHA-256 与待上传 APK 一致。
+3. 创建指向准确源码提交的 Release 草稿，上传附件。
+4. 核对 GitHub 上附件的大小和 SHA-256，再发布为正式版并设为 Latest。
+5. 不登录 GitHub 访问固定清单入口，并验证 APK 可下载且校验通过；在旧版客户端上确认更新提示、下载和覆盖安装。
+
+使用 GitHub CLI 的示例（将 `COMMIT_SHA` 替换为本次发布源码提交，先准备版本说明及校验文件）：
+
+```sh
+gh release create v0.10.18 --repo laozhangaa/HongGuoTV \
+  --target COMMIT_SHA --draft --title "红果TV v0.10.18" \
+  --notes-file outputs/release-notes.md
+
+gh release upload v0.10.18 --repo laozhangaa/HongGuoTV \
+  outputs/hongguoTV-laozhang-v0.10.18.apk \
+  outputs/update.json outputs/SHA256SUMS-v0.10.18
+
+# 附件核验通过后发布
+gh release edit v0.10.18 --repo laozhangaa/HongGuoTV --draft=false --latest
+```
+
+后续发布需递增实际 APK 的 `versionCode`，并更新版本名称、标签及文件名。已发布附件不用于伪造更高版本；首次迁移旧更新渠道时，用户需手动安装 v0.10.18 或更高版本。
