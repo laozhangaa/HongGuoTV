@@ -41,6 +41,36 @@ class PlaybackDeviceSessionTest {
         assertEquals(2,registrations.get())
     }
 
+    @Test fun simultaneousEmptyResponsesReplaceTheFailedProfileOnlyOnce() {
+        val registrations=AtomicInteger()
+        val session=PlaybackDeviceSession {
+            val n=registrations.incrementAndGet()
+            DeviceRegister.Registered("${100+n}","${200+n}")
+        }
+        val failed=session.profile(http)
+        val workers=Executors.newFixedThreadPool(2)
+        val start=CountDownLatch(1)
+        try {
+            val requests=(1..2).map { workers.submit<PlaybackDeviceSession.Profile?> { start.await(); session.recoverAfterEmpty(http,failed) } }
+            start.countDown()
+            val recovered=requests.first().get(2,TimeUnit.SECONDS)
+            assertNotSame(failed,recovered)
+            assertSame(recovered,requests.last().get(2,TimeUnit.SECONDS))
+            assertSame(recovered,session.profile(http))
+            assertEquals(2,registrations.get())
+        } finally { start.countDown(); workers.shutdownNow() }
+    }
+
+    @Test fun cancelledRecoveryKeepsTheCurrentSession() {
+        val registrations=AtomicInteger()
+        val session=PlaybackDeviceSession { registrations.incrementAndGet(); DeviceRegister.Registered("123","456") }
+        val failed=session.profile(http)
+        val scope=RequestScope()
+        assertThrows(InterruptedIOException::class.java) { scope.run { scope.cancel(); session.recoverAfterEmpty(http,failed) } }
+        assertSame(failed,session.profile(http))
+        assertEquals(1,registrations.get())
+    }
+
     @Test fun malformedRegistrationIsNotCached() {
         for(id in listOf("0","","-1","123x","1".repeat(31))) {
             val session=PlaybackDeviceSession { DeviceRegister.Registered(id,"456") }

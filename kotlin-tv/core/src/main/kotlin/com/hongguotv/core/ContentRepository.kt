@@ -265,10 +265,16 @@ class ContentRepository(val http: OkHttpClient = OkHttpClient.Builder().dns(Ipv4
         require(id.matches(Regex("[0-9]{1,30}")))
         val payload="""{"biz_param":{"detail_page_version":0,"device_level":3,"disable_digg_stat":false,"need_all_video_definition":true,"need_mp4_align":false,"use_os_player":false,"use_server_dns":false,"video_platform":1024},"mixed_video_id_map":{"1004":["$id"]}}""".toByteArray()
         val identity=playbackSession.profile(http)
-        val playerUrl="https://api5-normal-sinfonlineb.fqnovel.com/novel/player/multi_video_model/v1/?"+Signer.encode(identity.values)
-        val request=Signer.Request(playerUrl,mapOf("User-Agent" to PlaybackDeviceSession.USER_AGENT,"Accept" to "application/json; charset=utf-8,application/x-protobuf")+
-            (if(identity.cookie.isBlank()) emptyMap() else mapOf("Cookie" to identity.cookie)),payload)
-        val data=JSONObject(text(playerUrl,request,retryEmptyPlayback=true))
+        fun model(profile: PlaybackDeviceSession.Profile): String {
+            val playerUrl="https://api5-normal-sinfonlineb.fqnovel.com/novel/player/multi_video_model/v1/?"+Signer.encode(profile.values)
+            val request=Signer.Request(playerUrl,mapOf("User-Agent" to PlaybackDeviceSession.USER_AGENT,"Accept" to "application/json; charset=utf-8,application/x-protobuf")+
+                (if(profile.cookie.isBlank()) emptyMap() else mapOf("Cookie" to profile.cookie)),payload)
+            return text(playerUrl,request,retryEmptyPlayback=true)
+        }
+        val data=JSONObject(try { model(identity) } catch(problem: EmptyPlaybackResponseException) {
+            val recovered=playbackSession.recoverAfterEmpty(http,identity) ?: throw problem
+            model(recovered)
+        })
         val code=data.optInt("Code",data.optInt("code",0))
         if(code!=0) throw IOException("播放接口暂不可用（错误码 $code）")
         val map=data.optJSONObject("data") ?: throw IOException("播放信息为空")

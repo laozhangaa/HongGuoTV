@@ -15,6 +15,7 @@ class PlaybackDeviceRegistrationException(cause: Throwable? = null): IOException
 
 /** One anonymous identity shared by search, playback, recovery and preloading. */
 class PlaybackDeviceSession(
+    private val clock: () -> Long = { System.nanoTime()/1_000_000 },
     private val register: (OkHttpClient)->DeviceRegister.Registered? = { http ->
         val body=DeviceRegister.payload(VendorConstants.device)
         val request=Request.Builder().url(DeviceRegister.url())
@@ -33,6 +34,7 @@ class PlaybackDeviceSession(
     internal data class Profile(val values: Map<String,String>,val cookie: String)
     private val cdid=UUID.randomUUID().toString()
     private var ready: Profile?=null
+    private var lastRecoveryAt: Long?=null
     private fun checkCancelled() {
         if(Thread.currentThread().isInterrupted || RequestScope.currentCancelled()) throw InterruptedIOException("播放请求已取消")
     }
@@ -49,5 +51,17 @@ class PlaybackDeviceSession(
         return Profile(VendorConstants.device+mapOf("device_id" to identity.deviceId,"iid" to identity.installId,"cdid" to cdid),
             identity.cookies.filterKeys { it in setOf("install_id","ttreq","store-region","store-region-src") }
                 .entries.joinToString("; ") { (name,value) -> "$name=$value" }).also { ready=it }
+    }
+
+    /** Recover only after bounded empty-response retries, shared with concurrent preloading. */
+    @Synchronized internal fun recoverAfterEmpty(http: OkHttpClient,failed: Profile): Profile? {
+        checkCancelled()
+        // A different request may already have replaced this exact failed profile.
+        ready?.takeIf { it!==failed }?.let { return it }
+        val now=clock()
+        if(lastRecoveryAt?.let { now-it<60_000 }==true) return null
+        lastRecoveryAt=now
+        ready=null
+        return profile(http)
     }
 }

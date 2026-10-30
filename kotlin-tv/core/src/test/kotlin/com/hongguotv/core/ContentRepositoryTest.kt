@@ -85,17 +85,54 @@ class ContentRepositoryTest {
         }
     }
 
-    @Test fun persistentlyEmptyPlaybackStopsAfterThreeRequestsWithoutReplacingIdentity() {
+    @Test fun persistentEmptyPlaybackRecoversSessionAndSharesItWithTheNextRepository() {
+        val registrations=AtomicInteger()
+        val identities=mutableListOf<String?>()
+        val session=PlaybackDeviceSession {
+            val n=registrations.incrementAndGet()
+            DeviceRegister.Registered("${100+n}","${200+n}",cookies=mapOf("install_id" to "${200+n}"))
+        }
+        val client=OkHttpClient.Builder().addInterceptor { chain ->
+            val request=chain.request(); val id=request.url.queryParameter("device_id"); identities+=id
+            assertEquals("install_id="+request.url.queryParameter("iid"),request.header("Cookie"))
+            Response.Builder().request(request).protocol(Protocol.HTTP_1_1).code(200).message("OK")
+                .body((if(id=="101") "" else directPlaybackResponse()).toResponseBody()).build()
+        }.build()
+        assertEquals("1080P",ContentRepository(client,System::currentTimeMillis,session).stream("123").quality)
+        assertEquals("1080P",ContentRepository(client,System::currentTimeMillis,session).stream("123").quality)
+        assertEquals(listOf("101","101","101","102","102"),identities)
+        assertEquals(2,registrations.get())
+    }
+
+    @Test fun persistentlyEmptyPlaybackHasOneRecoveryAndACooldownAcrossAutomaticRetries() {
         val registrations=AtomicInteger()
         val attempts=AtomicInteger()
-        val session=PlaybackDeviceSession { registrations.incrementAndGet(); DeviceRegister.Registered("456","789") }
+        var now=0L
+        val session=PlaybackDeviceSession(clock={now}) { registrations.incrementAndGet(); DeviceRegister.Registered("456","789") }
         val client=OkHttpClient.Builder().addInterceptor { chain ->
             attempts.incrementAndGet()
             Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message("OK").body("".toResponseBody()).build()
         }.build()
         val repo=ContentRepository(client,System::currentTimeMillis,session)
         assertThrows(EmptyPlaybackResponseException::class.java) { repo.stream("123") }
-        assertEquals(3,attempts.get()); assertEquals(1,registrations.get())
+        assertEquals(6,attempts.get()); assertEquals(2,registrations.get())
+        assertThrows(EmptyPlaybackResponseException::class.java) { repo.stream("123") }
+        assertEquals(9,attempts.get()); assertEquals(2,registrations.get())
+        now=60_000L
+        assertThrows(EmptyPlaybackResponseException::class.java) { repo.stream("123") }
+        assertEquals(15,attempts.get()); assertEquals(3,registrations.get())
+    }
+
+    @Test fun explicitHttpRejectionDoesNotReplaceTheSession() {
+        val registrations=AtomicInteger()
+        val attempts=AtomicInteger()
+        val session=PlaybackDeviceSession { registrations.incrementAndGet(); DeviceRegister.Registered("456","789") }
+        val client=OkHttpClient.Builder().addInterceptor { chain ->
+            attempts.incrementAndGet()
+            Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(403).message("Forbidden").body("".toResponseBody()).build()
+        }.build()
+        assertThrows(IOException::class.java) { ContentRepository(client,System::currentTimeMillis,session).stream("123") }
+        assertEquals(1,attempts.get()); assertEquals(1,registrations.get())
     }
 
     private fun rankPayload(page: Int = 1, totalPages: Int = 2) = JSONObject()
